@@ -1,0 +1,108 @@
+<div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8" *ngIf="vendor">
+  <!-- Back button -->
+  <div class="mb-6">
+    <button (click)="goBack()" class="flex items-center text-slate-500 hover:text-slate-900 transition-colors">
+      <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+      </svg>
+      Back to Dashboard
+    </button>
+  </div>
+
+  <div class="bg-white shadow-xl rounded-3xl overflow-hidden border border-slate-200">
+    <!-- Header with status -->
+    <div
+      class="px-8 py-10 bg-slate-50 border-b border-slate-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+      <div class="flex items-center">
+        <div class="h-20 w-20 bg-blue-100 rounded-2xl flex items-center justify-center text-blue-600 shadow-inner">
+          <svg class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1" />
+          </svg>
+        </div>
+        <div class="ml-6">
+          <h1 class="text-3xl font-black text-slate-900 tracking-tight">{{vendor.storeName}}</h1>
+          <p class="text-slate-500 font-medium">Vendor ID: <span class="font-mono">{{vendor.id}}</span></p>
+        </div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-3">
+        <span [ngClass]="{
+          'bg-emerald-100 text-emerald-800 border-emerald-200': vendor.status?.toUpperCase() === 'ACTIVE',
+          'bg-yellow-100 text-yellow-800 border-yellow-200': vendor.status?.toUpperCase() === 'PENDING' || vendor.status?.toUpperCase() === 'IN REVIEW',
+          'bg-blue-100 text-blue-800 border-blue-200': vendor.status?.toUpperCase() === 'VERIFIED'
+        }" class="px-4 py-2 rounded-full text-sm font-bold border shadow-sm text-center">
+          Status: {{vendor.status | titlecase}}
+        </span>
+
+        <button *ngIf="vendor.status?.toUpperCase() === 'PENDING' || vendor.status?.toUpperCase() === 'IN REVIEW'"
+          (click)="onVerify()"
+          class="bg-emerald-600 text-white px-6 py-2 rounded-xl font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100">
+          Approve Vendor
+        </button>
+      </div>
+    </div>
+
+    <!-- Details content -->
+    <div class="p-8 lg:p-12">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+        <!-- Application information -->
+        <div class="space-y-8">
+          <section>
+            <h2 class="text-lg font-bold text-slate-900 border-b border-slate-100 pb-3 mb-5 uppercase tracking-wider">
+              Business Details</h2>
+            <dl class="space-y-4">
+              <div class="flex justify-between border-b border-slate-50 pb-3">
+                <dt class="text-slate-500 font-medium">Store Name</dt>
+                <dd class="text-slate-900 font-bold">{{vendor.name}}</dd>
+              </div>
+              <div class="flex justify-between border-b border-slate-50 pb-3">
+                <dt class="text-slate-500 font-medium">Application Date</dt>
+                <dd class="text-slate-900 font-bold">{{vendor.createdAt | date}}</dd>
+              </div>
+              <div class="flex justify-between border-b border-slate-50 pb-3">
+                <dt class="text-slate-500 font-medium">Verification Method</dt>
+                <dd class="text-slate-900 font-bold">Government ID (Verified)</dd>
+              </div>
+            </dl>
+          </section>
+
+          <section>
+            <h2 class="text-lg font-bold text-slate-900 border-b border-slate-100 pb-3 mb-5 uppercase tracking-wider">
+              Financial Summary</h2>
+            <div class="bg-blue-50 rounded-2xl p-6 border border-blue-100">
+              <div class="text-blue-600 text-sm font-bold uppercase tracking-widest mb-1">Total Lifetime Earnings</div>
+              <div class="text-3xl font-black text-slate-900">{{vendor.totalEarnings | currency}}</div>
+            </div>
+          </section>
+        </div>
+
+        <!-- Verification Documents -->
+        <div>
+          <h2 class="text-lg font-bold text-slate-900 border-b border-slate-100 pb-3 mb-5 uppercase tracking-wider">
+            Verification Document</h2>
+          <div
+            class="bg-slate-100 rounded-2xl aspect-w-4 aspect-h-3 flex flex-col items-center justify-center p-12 border-2 border-dashed border-slate-300">
+            <svg class="h-20 w-20 text-slate-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <p class="text-slate-600 font-bold mb-2">ID_Verification_{{vendor.verificationId}}.pdf</p>
+            <button
+              class="bg-white text-slate-700 px-6 py-2 rounded-xl font-bold border border-slate-200 hover:bg-slate-50 transition-colors shadow-sm">
+              View Document
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Footer -->
+      <div class="mt-12 pt-8 border-t border-slate-100 flex justify-end gap-4">
+        <button class="px-6 py-2 text-red-600 font-bold hover:bg-red-50 rounded-xl transition-colors">Reject
+          Application</button>
+        <button class="px-6 py-2 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800 transition-colors">Hold
+          for Review</button>
+      </div>
+    </div>
+  </div>
+</div>

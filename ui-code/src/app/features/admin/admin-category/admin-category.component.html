@@ -1,0 +1,373 @@
+<div class="px-8 py-8">
+
+  <!-- Header elements -->
+  <div class="flex items-center justify-between mb-8">
+    <div>
+      <h1 class="text-3xl font-black text-slate-900 tracking-tight">Category Master</h1>
+      <p class="text-sm font-medium text-slate-400 mt-1">Manage product categories and subcategories</p>
+    </div>
+    <button (click)="openAddModal()"
+      class="h-12 px-6 bg-blue-600 hover:bg-blue-700 text-white text-sm font-black rounded-xl transition-all shadow-xl shadow-blue-500/20 active:scale-95 flex items-center gap-2">
+      <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+      </svg>
+      Add Category
+    </button>
+  </div>
+
+  <!-- Category List / Empty State -->
+  <div *ngIf="categories.length === 0"
+    class="bg-white rounded-[2rem] border border-slate-100 p-16 text-center shadow-sm">
+    <div
+      class="h-24 w-24 rounded-full bg-slate-50 flex items-center justify-center mx-auto mb-6 border border-slate-100">
+      <svg class="h-10 w-10 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+      </svg>
+    </div>
+    <h3 class="text-xl font-black text-slate-900 mb-2">No categories found</h3>
+    <p class="text-slate-500 font-medium mb-8 max-w-sm mx-auto">Get started by creating your first product category for
+      the platform.</p>
+    <button (click)="openAddModal()" class="text-blue-600 font-bold hover:text-blue-700 transition-colors">
+      + Create Category
+    </button>
+  </div>
+
+  <!-- Data Table (When categories exist) -->
+  <div *ngIf="categories.length > 0" class="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead class="bg-slate-50 border-b border-slate-100">
+          <tr>
+            <th class="py-4 px-6 text-[10px] font-black uppercase tracking-widest text-slate-400">Category details</th>
+            <th class="py-4 px-6 text-[10px] font-black uppercase tracking-widest text-slate-400">Slug</th>
+            <th class="py-4 px-6 text-[10px] font-black uppercase tracking-widest text-slate-400">Comm. %</th>
+            <th class="py-4 px-6 text-[10px] font-black uppercase tracking-widest text-slate-400">Status</th>
+            <th class="py-4 px-6 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Actions
+            </th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          <tr *ngFor="let cat of displayCategories" class="hover:bg-slate-50/50 transition-colors group">
+            <td class="py-4 px-6 text-sm font-bold text-slate-900 flex items-center gap-3"
+              [style.padding-left.px]="24 + (cat.depth * 32)"
+              [class.cursor-pointer]="cat.hasChildren"
+              (click)="toggleCategory(cat)">
+              <div
+                class="h-8 w-8 rounded-lg bg-slate-50 border border-slate-100 flex-shrink-0 flex items-center justify-center overflow-hidden">
+                <img *ngIf="cat.iconUrl" [src]="getUrl(cat.iconUrl)" class="h-full w-full object-contain" alt="icon">
+                <svg *ngIf="!cat.iconUrl" class="h-4 w-4 text-slate-300" fill="none" viewBox="0 0 24 24"
+                  stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <div class="flex items-center gap-2">
+                <span *ngIf="cat.depth > 0" class="text-slate-300">—</span>
+                {{ cat.name }}
+                <!-- Accordion Toggle Icon -->
+                <svg *ngIf="cat.hasChildren" class="h-4 w-4 text-slate-400 transition-transform duration-200"
+                  [class.rotate-90]="cat.isExpanded" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </td>
+            <td class="py-4 px-6 text-sm text-slate-500 font-medium">{{ cat.slug }}</td>
+            <td class="py-4 px-6 text-sm text-slate-500 font-bold">{{ cat.commissionPercentage | number:'1.2-2' }}%</td>
+            <td class="py-4 px-6">
+              <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black"
+                [ngClass]="cat.isActive ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-600'">
+                <span class="h-1.5 w-1.5 rounded-full"
+                  [ngClass]="cat.isActive ? 'bg-emerald-500' : 'bg-slate-400'"></span>
+                {{ cat.isActive ? 'Active' : 'Inactive' }}
+              </span>
+            </td>
+            <td class="py-4 px-6 text-right">
+              <button (click)="openEditModal(cat)"
+                class="h-8 w-8 inline-flex items-center justify-center rounded-xl text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors mr-1">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="px-6 py-4 border-t border-slate-100 flex items-center justify-between text-sm">
+      <div class="text-slate-500 font-medium">
+        Showing <span class="font-black text-slate-900">{{categories.length > 0 ? (currentPage * pageSize) + 1 :
+          0}}</span>
+        to <span class="font-black text-slate-900">{{Math.min((currentPage + 1) * pageSize, totalElements)}}</span>
+        of <span class="font-black text-slate-900">{{totalElements}}</span> requests
+      </div>
+
+      <div class="flex items-center gap-2" *ngIf="totalPages > 1">
+        <button [disabled]="currentPage === 0" (click)="prevPage()"
+          class="h-8 w-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:border-slate-300 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+
+        <div class="flex gap-1">
+          <button *ngFor="let page of getPages()" (click)="onPageChange(page)"
+            class="h-8 w-8 flex items-center justify-center rounded-lg text-sm font-bold transition-all"
+            [ngClass]="currentPage === page ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20' : 'text-slate-600 hover:bg-slate-100'">
+            {{ page + 1 }}
+          </button>
+        </div>
+
+        <button [disabled]="currentPage === totalPages - 1" (click)="nextPage()"
+          class="h-8 w-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:border-slate-300 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Category Modal -->
+<div *ngIf="showAddModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+  <!-- Backdrop -->
+  <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" (click)="closeAddModal()"></div>
+
+  <!-- Modal box -->
+  <div
+    class="relative bg-white rounded-[2rem] shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col animate-modalSlideUp">
+    <div
+      class="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-white flex-shrink-0 z-10 sticky top-0">
+      <h2 class="text-xl font-black text-slate-900">{{ editCategoryId ? 'Edit Category' : 'Add New Category' }}</h2>
+      <button (click)="closeAddModal()"
+        class="h-8 w-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-400 transition-colors">
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <div class="p-8 overflow-y-auto" style="scrollbar-width: thin;">
+      <form [formGroup]="categoryForm" (ngSubmit)="onSubmit()" class="space-y-6">
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Name -->
+          <div>
+            <label class="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2">Name *</label>
+            <input type="text" formControlName="name" (blur)="generateSlug()" placeholder="e.g. Electronics"
+              class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all">
+          </div>
+
+          <!-- Slug -->
+          <div>
+            <label class="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2">Slug *</label>
+            <input type="text" formControlName="slug" placeholder="e.g. electronics"
+              class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all">
+          </div>
+
+          <!-- Parent Category (Hierarchical Select) -->
+          <div>
+            <label class="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2">Parent
+              Category</label>
+            <select formControlName="parentCategoryId"
+              class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all appearance-none cursor-pointer">
+              <option [value]=null>Root Category (null)</option>
+              <option *ngFor="let cat of availableParentCategories" [value]="cat.id">
+                {{cat.name}}
+              </option>
+            </select>
+            <p class="text-[10px] text-slate-400 mt-1">Select null to create a main category.</p>
+          </div>
+
+          <!-- Commission % -->
+          <div>
+            <label class="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2">Commission % *</label>
+            <div class="relative">
+              <input type="number" step="0.01" formControlName="commissionPercentage"
+                class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all">
+            </div>
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div>
+          <label class="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2">Description *</label>
+          <textarea formControlName="description" rows="3" placeholder="Category description..."
+            class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all resize-none"></textarea>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Banner Image -->
+          <div class="md:col-span-2">
+            <label class="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2">Banner Image *</label>
+            <div class="relative group cursor-pointer">
+              <input type="file" (change)="onFileSelected($event)" accept="image/*"
+                class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" [required]="!editCategoryId">
+              <div
+                class="w-full px-4 py-8 bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl text-center transition-all group-hover:border-blue-400 group-hover:bg-blue-50">
+                <div *ngIf="!selectedBannerFile">
+                  <!-- Existing Banner Preview -->
+                  <div *ngIf="existingBannerUrl" class="flex flex-col items-center">
+                    <img [src]="getUrl(existingBannerUrl)"
+                      class="h-32 w-full object-contain rounded-xl mb-3 border border-slate-100 bg-white"
+                      alt="Existing banner">
+                    <div class="flex items-center gap-2 text-blue-600 bg-blue-50 px-3 py-1.5 rounded-full">
+                      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                      </svg>
+                      <span class="text-[10px] font-black uppercase tracking-widest">Change Banner Image</span>
+                    </div>
+                  </div>
+
+                  <!-- Default Upload View -->
+                  <div *ngIf="!existingBannerUrl">
+                    <svg class="mx-auto h-8 w-8 text-slate-400 mb-2 group-hover:text-blue-500" fill="none"
+                      viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <p class="text-sm font-bold text-slate-600 group-hover:text-blue-600">Click or drag image to upload
+                    </p>
+                    <p class="text-[10px] text-slate-400 mt-1 uppercase tracking-widest">PNG, JPG up to 5MB</p>
+                  </div>
+                </div>
+                <div *ngIf="selectedBannerFile" class="flex flex-col items-center">
+                  <div class="h-12 w-12 rounded-full bg-emerald-100 flex items-center justify-center mb-2">
+                    <svg class="h-6 w-6 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <p class="text-sm font-bold text-slate-700 truncate w-full px-4">{{ selectedBannerFile.name }}</p>
+                  <p class="text-xs text-slate-500 mt-1">{{ (selectedBannerFile.size / 1024 / 1024) | number:'1.0-2' }}
+                    MB</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Variant Attributes -->
+        <div class="border-t border-slate-100 pt-6 mt-4">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h4 class="text-xs font-black text-slate-900 uppercase tracking-widest">Variant Attributes</h4>
+              <p class="text-[9px] text-slate-400 font-bold uppercase mt-1">Define standard keys and suggested values
+              </p>
+            </div>
+            <button type="button" (click)="addVariantAttribute()"
+              class="text-blue-600 hover:text-blue-700 flex items-center text-[10px] font-black uppercase tracking-widest">
+              <svg class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+              </svg>
+              Add Attribute
+            </button>
+          </div>
+
+          <div formArrayName="variantAttributes" class="space-y-4">
+            <div *ngFor="let attr of variantAttributes.controls; let i=index" [formGroupName]="i"
+              class="bg-slate-50 border border-slate-200 rounded-2xl p-4 animate-in fade-in slide-in-from-top-1">
+
+              <div class="flex items-center gap-3 mb-4">
+                <div class="flex-1">
+                  <label class="block text-[10px] font-black text-slate-500 uppercase mb-2">Attribute Key</label>
+                  <input type="text" formControlName="name"
+                    class="w-full px-4 py-2 text-sm border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-100"
+                    placeholder="e.g. Color, Size">
+                </div>
+                <button type="button" (click)="removeVariantAttribute(i)"
+                  class="mt-6 text-slate-300 hover:text-red-500 transition-colors">
+                  <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              </div>
+
+              <!-- Nested Values -->
+              <div>
+                <div class="flex items-center justify-between mb-2">
+                  <label class="text-[10px] font-black text-slate-500 uppercase">Suggested Values</label>
+                  <button type="button" (click)="addVariantValue(i)"
+                    class="text-blue-600 hover:text-blue-700 text-[10px] font-bold">+ Add Value</button>
+                </div>
+                <div formArrayName="values" class="flex flex-wrap gap-2">
+                  <div *ngFor="let valControl of getVariantValues(i).controls; let j=index"
+                    class="flex items-center gap-1 group">
+                    <input type="text" [formControlName]="j"
+                      class="px-3 py-1.5 text-xs border border-slate-200 rounded-lg bg-white w-24 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                      placeholder="e.g. Red">
+                    <button type="button" (click)="removeVariantValue(i, j)"
+                      class="text-slate-300 hover:text-red-500 transition-colors">
+                      <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="variantAttributes.length === 0"
+            class="text-center py-8 bg-slate-50/50 rounded-[1.5rem] border border-dashed border-slate-200 text-xs text-slate-400 font-bold uppercase tracking-widest">
+            No variation rules defined for this category
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+          <!-- Display order -->
+          <div>
+            <label class="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2">Display Order</label>
+            <input type="number" formControlName="displayOrder"
+              class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all">
+          </div>
+
+          <!-- Active status -->
+          <div class="flex items-center gap-3 pt-6">
+            <input type="checkbox" formControlName="isActive" id="isActiveCat"
+              class="h-5 w-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 bg-slate-50 transition-all cursor-pointer">
+            <label for="isActiveCat" class="text-sm font-bold text-slate-700 cursor-pointer select-none">Mark as
+              Active</label>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- Footer CTA -->
+    <div
+      class="px-8 py-5 border-t border-slate-100 bg-slate-50/50 flex items-center justify-end gap-3 flex-shrink-0 z-10 sticky bottom-0">
+      <button type="button" (click)="closeAddModal()"
+        class="px-6 h-12 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-200 transition-colors">
+        Cancel
+      </button>
+      <button type="button" (click)="onSubmit()" [disabled]="categoryForm.invalid || isSaving"
+        class="px-8 h-12 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white text-sm font-black rounded-xl transition-all shadow-xl shadow-blue-500/20">
+        {{ isSaving ? 'Saving...' : (editCategoryId ? 'Update Category' : 'Create Category') }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>
+  @keyframes modalSlideUp {
+    from {
+      opacity: 0;
+      transform: translateY(16px) scale(0.98);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  .animate-modalSlideUp {
+    animation: modalSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+</style>

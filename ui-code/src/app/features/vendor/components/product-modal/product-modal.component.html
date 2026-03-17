@@ -1,0 +1,276 @@
+<!-- Product Modal -->
+<div *ngIf="isOpen"
+  class="fixed inset-0 z-50 flex items-center justify-center overflow-x-hidden overflow-y-auto outline-none focus:outline-none bg-slate-900 bg-opacity-50">
+  <div class="relative w-full max-w-2xl mx-auto my-6">
+    <div class="relative flex flex-col w-full bg-white border-0 rounded-xl shadow-lg outline-none focus:outline-none">
+      <div class="flex items-start justify-between p-5 border-b border-solid rounded-t border-slate-200">
+        <h3 class="text-xl font-semibold text-slate-900">{{isEditing ? 'Edit Product' : 'Add New Product'}}</h3>
+        <button
+          class="p-1 ml-auto border-0 text-slate-500 hover:text-slate-700 float-right text-3xl leading-none font-semibold outline-none focus:outline-none"
+          (click)="onClose()">
+          <span class="text-slate-500 h-6 w-6 text-2xl block outline-none focus:outline-none">&times;</span>
+        </button>
+      </div>
+
+      <form [formGroup]="productForm" (ngSubmit)="onSubmit()">
+        <div class="relative p-6 flex-auto max-h-[70vh] overflow-y-auto">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Base Fields -->
+            <!-- Product Image Preview -->
+            <div class="col-span-1 md:col-span-2 flex flex-col items-center">
+              <label class="block text-sm font-bold text-slate-700 mb-3 self-start">Product Image</label>
+              <div class="relative group">
+                <div
+                  class="h-40 w-40 rounded-2xl border-2 border-dashed border-slate-200 overflow-hidden bg-slate-50 flex items-center justify-center transition-all duration-300 group-hover:border-blue-400 group-hover:bg-blue-50 shadow-inner">
+                  <img *ngIf="previewUrl()" [src]="previewUrl()"
+                    class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    alt="Product preview">
+                  <div *ngIf="!previewUrl()" class="flex flex-col items-center text-slate-400">
+                    <svg class="h-10 w-10 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span class="text-[10px] font-medium uppercase tracking-wider">No Image</span>
+                  </div>
+                </div>
+
+                <!-- Change Image Button overlay -->
+                <button *ngIf="!isEditing" type="button" (click)="fileInput.click()"
+                  class="absolute -bottom-2 -right-2 bg-white text-blue-600 p-2 rounded-xl shadow-lg border border-slate-100 hover:bg-blue-600 hover:text-white transition-all duration-200 group-hover:scale-110">
+                  <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </button>
+              </div>
+
+              <input #fileInput type="file" (change)="onFileSelected($event)" accept="image/*" class="hidden">
+              <p class="text-[10px] text-slate-400 mt-4 italic">Recommended: Square image, max 2MB.</p>
+            </div>
+
+            <div class="col-span-1 md:col-span-2">
+              <label class="block text-sm font-medium text-slate-700 mb-1">Product Name</label>
+              <input type="text" formControlName="name"
+                class="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+            </div>
+
+            <div class="col-span-1 md:col-span-2">
+              <label class="block text-sm font-medium text-slate-700 mb-1">Description</label>
+              <textarea formControlName="description" rows="3"
+                class="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+                placeholder="Product details..."></textarea>
+            </div>
+
+            <!-- Hierarchical Category Selection -->
+            <div class="col-span-1">
+              <label class="block text-sm font-medium text-slate-700 mb-1">Main Category</label>
+              <select formControlName="parentCategory" (change)="onParentCategoryChange()"
+                class="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 cursor-pointer">
+                <option value="">Select Main Category...</option>
+                <option *ngFor="let cat of hierarchy" [value]="cat.id">{{ cat.name }}</option>
+              </select>
+            </div>
+
+            <div class="col-span-1">
+              <label class="block text-sm font-medium text-slate-700 mb-1">Sub-Category</label>
+              <select formControlName="subCategory" (change)="onSubCategoryChange()"
+                class="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 cursor-pointer"
+                [disabled]="!productForm.get('parentCategory')?.value">
+                <option value="">Select Sub-Category...</option>
+                <option *ngFor="let sub of subCategories" [value]="sub.id">{{ sub.name }}</option>
+              </select>
+            </div>
+
+            <!-- <div class="col-span-1" *ngIf="isEditing">
+              <label class="block text-sm font-medium text-slate-700 mb-1">SKU</label>
+              <input type="text" formControlName="sku"
+                class="w-full px-3 py-2 border border-slate-300 bg-slate-100 rounded-md focus:outline-none" readonly>
+              <p class="text-xs text-slate-500 mt-1">SKU is auto-generated and cannot be changed.</p>
+            </div> -->
+
+            <div class="col-span-1">
+              <label class="block text-sm font-medium text-slate-700 mb-1">Price ($)</label>
+              <input type="number" formControlName="price"
+                class="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+            </div>
+
+            <div class="col-span-1">
+              <label class="block text-sm font-medium text-slate-700 mb-1">Initial Stock</label>
+              <input type="number" formControlName="stock"
+                class="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+            </div>
+
+            <!-- Category Specific Details (Dynamic FormArray) -->
+            <div class="col-span-1 md:col-span-2 border-t border-slate-100 pt-6 mt-4">
+              <div class="flex items-center justify-between mb-4">
+                <h4 class="text-sm font-bold text-slate-900 uppercase tracking-widest">Category Specific Details</h4>
+                <button type="button" (click)="addDetail()"
+                  class="text-blue-600 hover:text-blue-700 flex items-center text-xs font-bold uppercase tracking-wider">
+                  <svg class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                  </svg>
+                  Add Custom Field
+                </button>
+              </div>
+
+              <div formArrayName="customFields" class="space-y-3">
+                <div *ngFor="let field of customFields.controls; let i=index" [formGroupName]="i"
+                  class="flex items-center space-x-3 group animate-in fade-in slide-in-from-top-1 duration-200">
+                  <div class="flex-1">
+                    <input type="text" formControlName="key"
+                      class="block w-full px-4 py-2 text-xs border border-slate-200 rounded-lg bg-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all"
+                      placeholder="Field Name (e.g. Processor)">
+                  </div>
+                  <div class="flex-1">
+                    <input type="text" formControlName="value"
+                      class="block w-full px-4 py-2 text-xs border border-slate-200 rounded-lg bg-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all"
+                      placeholder="Value (e.g. Intel i7)">
+                  </div>
+                  <button type="button" (click)="removeDetail(i)"
+                    class="text-slate-300 hover:text-red-500 transition-colors">
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <div *ngIf="customFields.length === 0" class="text-center py-4 text-xs text-slate-400 italic">
+                No specifications added yet.
+              </div>
+            </div>
+
+            <!-- Product Variants Section -->
+            <div class="col-span-1 md:col-span-2 border-t border-slate-100 pt-6 mt-4">
+              <div class="flex items-center justify-between mb-4">
+                <h4 class="text-sm font-bold text-slate-900 uppercase tracking-widest">Product Variants</h4>
+                <button type="button" (click)="addVariant()"
+                  class="bg-blue-50 text-blue-600 hover:bg-blue-100 px-3 py-1.5 rounded-lg flex items-center text-xs font-bold uppercase tracking-wider transition-all">
+                  <svg class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                  </svg>
+                  Add Variant
+                </button>
+              </div>
+
+              <div formArrayName="variants" class="space-y-6">
+                <div *ngFor="let variant of variants.controls; let vIndex=index" [formGroupName]="vIndex"
+                  class="p-4 border border-slate-200 rounded-xl bg-slate-50 relative animate-in fade-in slide-in-from-top-2 duration-300">
+
+                  <!-- Remove Variant Button -->
+                  <button type="button" (click)="removeVariant(vIndex)"
+                    class="absolute top-3 right-3 text-slate-400 hover:text-red-500 transition-colors p-1">
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div>
+                      <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">SKU</label>
+                      <input type="text" formControlName="sku"
+                        class="w-full px-3 py-2 text-sm border border-slate-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                      <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Price ($)</label>
+                      <input type="number" formControlName="price"
+                        class="w-full px-3 py-2 text-sm border border-slate-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                      <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Status</label>
+                      <select formControlName="status"
+                        class="w-full px-3 py-2 text-sm border border-slate-300 rounded-md focus:ring-blue-500 focus:border-blue-500 bg-white">
+                        <option value="ACTIVE">Active</option>
+                        <option value="INACTIVE">Inactive</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <!-- Variant Attributes -->
+                  <div class="border-t border-slate-200 pt-3">
+                    <div class="flex items-center justify-between mb-2">
+                      <div class="flex flex-wrap items-center gap-2">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase mr-1">Variant Attributes</span>
+                        <!-- Suggestions from Category (Keys) -->
+                        <button *ngFor="let suggestion of selectedCategoryAttributes" type="button"
+                          (click)="addSuggestedAttribute(vIndex, suggestion)"
+                          class="bg-slate-100 hover:bg-blue-50 text-slate-600 hover:text-blue-600 px-2 py-0.5 rounded-full text-[9px] font-bold border border-slate-200 hover:border-blue-200 transition-all">
+                          + {{suggestion.attributeName}}
+                        </button>
+                      </div>
+                      <!-- <button type="button" (click)="addVariantAttribute(vIndex)"
+                        class="text-blue-600 hover:text-blue-700 text-[10px] font-bold uppercase whitespace-nowrap ml-2">
+                        + Add Custom
+                      </button> -->
+                    </div>
+
+                    <div formArrayName="attributes" class="space-y-3">
+                      <div *ngFor="let attr of getVariantAttributes(vIndex).controls; let aIndex=index"
+                        [formGroupName]="aIndex" class="group/attr">
+                        <div class="flex items-center space-x-2">
+                          <input type="text" formControlName="key"
+                            class="flex-1 px-3 py-1.5 text-xs border border-slate-200 rounded-md bg-white focus:ring-1 focus:ring-blue-100"
+                            placeholder="Key (e.g. Color)">
+                          <div class="flex-1 relative">
+                            <input type="text" formControlName="value"
+                              class="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-md bg-white focus:ring-1 focus:ring-blue-100"
+                              placeholder="Value (e.g. Black)">
+                            <!-- Color Code Input (visible only for Color key) -->
+                            <div *ngIf="attr.get('key')?.value?.toLowerCase() === 'color'"
+                              class="absolute right-1 top-1 flex items-center gap-1">
+                              <input type="color" formControlName="code" (input)="onColorCodeChange(vIndex, aIndex)"
+                                class="w-5 h-5 border-0 p-0 bg-transparent cursor-pointer">
+                            </div>
+                          </div>
+                          <button type="button" (click)="removeVariantAttribute(vIndex, aIndex)"
+                            class="text-slate-300 hover:text-red-500 transition-colors">
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
+
+                        <!-- Value Suggestions for this specific key -->
+                        <div *ngIf="getSuggestedValues(attr.get('key')?.value).length > 0"
+                          class="mt-1.5 ml-1 flex flex-wrap gap-1.5">
+                          <button *ngFor="let suggestedVal of getSuggestedValues(attr.get('key')?.value)" type="button"
+                            (click)="attr.get('value')?.setValue(suggestedVal)"
+                            class="text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-blue-50/50 text-blue-500 border border-blue-100 hover:bg-blue-600 hover:text-white transition-all">
+                            {{suggestedVal}}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    <div *ngIf="getVariantAttributes(vIndex).length === 0"
+                      class="text-center py-2 text-[10px] text-slate-400 italic">
+                      No attributes for this variant.
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div *ngIf="variants.length === 0"
+                class="text-center py-6 border-2 border-dashed border-slate-200 rounded-xl text-sm text-slate-400 mt-2">
+                No variants added. Product will be treated as a single item.
+              </div>
+            </div>
+
+          </div>
+        </div>
+        <div class="flex items-center justify-end p-5 border-t border-solid border-slate-200 rounded-b">
+          <button
+            class="text-slate-500 background-transparent font-bold uppercase px-6 py-2 text-sm outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150"
+            type="button" (click)="onClose()">
+            Cancel
+          </button>
+          <button
+            class="bg-blue-600 text-white hover:bg-blue-700 font-bold uppercase text-sm px-6 py-3 rounded shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150 disabled:opacity-50"
+            type="submit" [disabled]="!productForm.valid">
+            {{isEditing ? 'Update Product' : 'Save Product'}}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

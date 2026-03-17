@@ -1,0 +1,334 @@
+<div class="bg-slate-50 min-h-screen py-10 px-4">
+  <div class="max-w-5xl mx-auto">
+
+    <!-- Stepper -->
+    <div class="flex items-center justify-center mb-12" *ngIf="step() !== 'confirmation'">
+      <div *ngFor="let s of steps; let i = index; let last = last" class="flex items-center">
+        <div class="flex flex-col items-center">
+          <div
+            class="h-10 w-10 rounded-full flex items-center justify-center text-xs font-black border-2 transition-all"
+            [ngClass]="{
+              'bg-blue-600 border-blue-600 text-white': stepIndex() >= i,
+              'bg-white border-slate-200 text-slate-400': stepIndex() < i
+            }">
+            <svg *ngIf="stepIndex() > i" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+            </svg>
+            <span *ngIf="stepIndex() <= i">{{i + 1}}</span>
+          </div>
+          <span class="text-[10px] font-black uppercase tracking-widest mt-2"
+            [ngClass]="stepIndex() >= i ? 'text-blue-600' : 'text-slate-400'">{{s.label}}</span>
+        </div>
+        <div *ngIf="!last" class="w-16 md:w-24 h-0.5 mx-2 mb-5"
+          [ngClass]="stepIndex() > i ? 'bg-blue-600' : 'bg-slate-200'"></div>
+      </div>
+    </div>
+
+    <!-- ===== STEP 1: DELIVERY ADDRESS ===== -->
+    <div *ngIf="step() === 'address'" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
+          <h2 class="text-2xl font-black text-slate-900 tracking-tighter mb-8">Delivery Address</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div class="md:col-span-2">
+              <label class="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2">Full Name *</label>
+              <input [(ngModel)]="address.fullName" type="text" placeholder="e.g. John Doe"
+                class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all">
+            </div>
+            <div>
+              <label class="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2">Phone *</label>
+              <input [(ngModel)]="address.phone" type="tel" placeholder="10-digit mobile number"
+                class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all">
+            </div>
+            <div>
+              <label class="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2">Pincode *</label>
+              <input [(ngModel)]="address.pincode" type="text" placeholder="6-digit pincode"
+                class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all">
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2">Address Line 1
+                *</label>
+              <input [(ngModel)]="address.line1" type="text" placeholder="House / Flat no., Street, Area"
+                class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all">
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2">Address Line 2 <span
+                  class="normal-case font-medium">(optional)</span></label>
+              <input [(ngModel)]="address.line2" type="text" placeholder="Landmark / Colony"
+                class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all">
+            </div>
+            <div>
+              <label class="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2">City *</label>
+              <input [(ngModel)]="address.city" type="text" placeholder="e.g. Mumbai"
+                class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all">
+            </div>
+            <div>
+              <label class="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2">State *</label>
+              <select [(ngModel)]="address.state"
+                class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all">
+                <option value="">Select State</option>
+                <option *ngFor="let state of indianStates" [value]="state">{{state}}</option>
+              </select>
+            </div>
+          </div>
+          <button (click)="proceedToReview()" [disabled]="!isAddressValid()"
+            class="mt-8 w-full h-14 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 text-white font-black text-sm uppercase tracking-widest rounded-2xl transition-all shadow-xl shadow-blue-500/20 active:scale-95">
+            Continue to Review →
+          </button>
+        </div>
+      </div>
+
+      <!-- Order Mini Summary -->
+      <div class="lg:col-span-1">
+        <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 sticky top-28">
+          <h3 class="text-sm font-black text-slate-900 uppercase tracking-widest mb-4">Order Summary</h3>
+          <div class="space-y-3">
+            <div *ngFor="let item of cartService.items()" class="flex justify-between text-xs">
+              <span class="text-slate-600 font-medium truncate">{{item.product.name}} <span *ngIf="item.selectedSize"
+                  class="text-slate-400">({{item.selectedSize}})</span> ×{{item.quantity}}</span>
+              <span class="font-black text-slate-900 ml-2">{{item.unitPrice * item.quantity | currency}}</span>
+            </div>
+          </div>
+          <div class="border-t border-slate-100 mt-4 pt-4 flex justify-between">
+            <span class="font-black text-slate-900">Total</span>
+            <span class="font-black text-slate-900 text-lg">{{cartService.total() | currency}}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== STEP 2: ORDER REVIEW ===== -->
+    <div *ngIf="step() === 'review'" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2 space-y-6">
+        <!-- Address Review -->
+        <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-sm font-black text-slate-900 uppercase tracking-widest">Delivering To</h3>
+            <button (click)="step.set('address')" class="text-xs font-black text-blue-600 hover:underline">Edit</button>
+          </div>
+          <p class="font-black text-slate-900">{{address.fullName}}</p>
+          <p class="text-sm text-slate-500 mt-1">{{address.line1}}<span *ngIf="address.line2">, {{address.line2}}</span>
+          </p>
+          <p class="text-sm text-slate-500">{{address.city}}, {{address.state}} – {{address.pincode}}</p>
+          <p class="text-sm text-slate-500 mt-1">📞 {{address.phone}}</p>
+        </div>
+
+        <!-- Items -->
+        <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
+          <h3 class="text-sm font-black text-slate-900 uppercase tracking-widest mb-6">Items Ordered</h3>
+          <div class="space-y-4">
+            <div *ngFor="let item of cartService.items()" class="flex gap-4">
+              <div
+                class="h-16 w-16 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center flex-shrink-0 p-1">
+                <img [src]="getUrl(item.product.imageUrl)" [alt]="item.product.name"
+                  class="h-full w-full object-contain mix-blend-multiply">
+              </div>
+              <div class="flex-1">
+                <p class="text-sm font-black text-slate-900">{{item.product.name}}</p>
+                <p class="text-xs text-slate-400 mt-1 flex items-center gap-2">
+                  <span *ngIf="item.selectedSize">Size: {{item.selectedSize}}</span>
+                  <span *ngIf="item.selectedSize && item.selectedColor">·</span>
+                  <span *ngIf="item.selectedColor" class="flex items-center gap-1">
+                    <div class="h-3 w-3 rounded-full border border-slate-200" [style.backgroundColor]="getColorCode(item.selectedColor) || item.selectedColor"></div>
+                    {{getColorName(item.selectedColor)}}
+                  </span>
+                  <span>· Qty: {{item.quantity}}</span>
+                </p>
+                <p class="text-sm font-black text-slate-900 mt-1">{{item.unitPrice * item.quantity | currency}}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <button (click)="proceedToPayment()"
+          class="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white font-black text-sm uppercase tracking-widest rounded-2xl transition-all shadow-xl shadow-blue-500/20 active:scale-95">
+          Continue to Payment →
+        </button>
+      </div>
+
+      <!-- Total Summary -->
+      <div class="lg:col-span-1">
+        <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 sticky top-28">
+          <h3 class="text-sm font-black text-slate-900 uppercase tracking-widest mb-4">Price Details</h3>
+          <div class="space-y-3 text-sm">
+            <div class="flex justify-between"><span class="text-slate-500 font-medium">Subtotal</span><span
+                class="font-black">{{cartService.total() | currency}}</span></div>
+            <div class="flex justify-between"><span class="text-slate-500 font-medium">Delivery</span><span
+                class="font-black text-emerald-600">Free</span></div>
+            <div class="flex justify-between"><span class="text-slate-500 font-medium">Discount</span><span
+                class="font-black text-emerald-600">–₹0.00</span></div>
+          </div>
+          <div class="border-t border-slate-100 mt-4 pt-4 flex justify-between">
+            <span class="font-black text-slate-900">Total Payable</span>
+            <span class="font-black text-slate-900 text-xl">{{cartService.total() | currency}}</span>
+          </div>
+          <p class="text-[10px] text-emerald-600 font-bold mt-2">Inclusive of all taxes</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== STEP 3: PAYMENT ===== -->
+    <div *ngIf="step() === 'payment'" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
+          <h2 class="text-2xl font-black text-slate-900 tracking-tighter mb-8">Payment</h2>
+
+          <!-- Payment Method Tabs -->
+          <div class="grid grid-cols-3 gap-3 mb-8">
+            <button
+              *ngFor="let method of [{key:'cod', label:'Cash on Delivery'}, {key:'card', label:'Credit / Debit Card'}, {key:'upi', label:'UPI'}]"
+              (click)="setPaymentMethod(method.key)" class="p-4 rounded-2xl border-2 text-center transition-all"
+              [ngClass]="paymentMethod() === method.key ? 'border-blue-600 bg-blue-50' : 'border-slate-200 hover:border-blue-200'">
+              <!-- Icons -->
+              <svg *ngIf="method.key==='cod'" class="h-6 w-6 mx-auto mb-2"
+                [ngClass]="paymentMethod()==='cod'?'text-blue-600':'text-slate-400'" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+              <svg *ngIf="method.key==='card'" class="h-6 w-6 mx-auto mb-2"
+                [ngClass]="paymentMethod()==='card'?'text-blue-600':'text-slate-400'" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+              </svg>
+              <svg *ngIf="method.key==='upi'" class="h-6 w-6 mx-auto mb-2"
+                [ngClass]="paymentMethod()==='upi'?'text-blue-600':'text-slate-400'" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+              </svg>
+              <p class="text-[10px] font-black uppercase tracking-wide"
+                [ngClass]="paymentMethod() === method.key ? 'text-blue-700' : 'text-slate-500'">{{method.label}}</p>
+            </button>
+          </div>
+
+          <!-- COD -->
+          <div *ngIf="paymentMethod() === 'cod'" class="bg-amber-50 rounded-2xl p-6 border border-amber-100">
+            <div class="flex items-start gap-3">
+              <svg class="h-5 w-5 text-amber-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div>
+                <p class="text-sm font-black text-amber-900">Cash on Delivery</p>
+                <p class="text-xs text-amber-700 font-medium mt-1">Pay in cash when your order is delivered. No extra
+                  charges.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card -->
+          <div *ngIf="paymentMethod() === 'card'" class="space-y-4">
+            <div>
+              <label class="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2">Cardholder
+                Name</label>
+              <input [(ngModel)]="card.name" type="text" placeholder="Name as on card"
+                class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all">
+            </div>
+            <div>
+              <label class="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2">Card Number</label>
+              <input [(ngModel)]="card.number" type="text" placeholder="1234 5678 9012 3456" maxlength="19"
+                class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium tracking-widest focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all">
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2">Expiry</label>
+                <input [(ngModel)]="card.expiry" type="text" placeholder="MM / YY" maxlength="7"
+                  class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all">
+              </div>
+              <div>
+                <label class="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2">CVV</label>
+                <input [(ngModel)]="card.cvv" type="password" placeholder="•••" maxlength="4"
+                  class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all">
+              </div>
+            </div>
+            <div class="flex items-center gap-2 bg-emerald-50 rounded-xl p-3 border border-emerald-100">
+              <svg class="h-4 w-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+              <p class="text-[10px] font-bold text-emerald-700">256-bit SSL secured. Your card details are safe.</p>
+            </div>
+          </div>
+
+          <!-- UPI -->
+          <div *ngIf="paymentMethod() === 'upi'" class="space-y-4">
+            <div>
+              <label class="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2">UPI ID</label>
+              <input [(ngModel)]="upiId" type="text" placeholder="yourname@upi"
+                class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all">
+            </div>
+            <p class="text-xs text-slate-400 font-medium">A payment request will be sent to your UPI app for approval.
+            </p>
+          </div>
+
+          <button (click)="placeOrder()"
+            class="mt-8 w-full h-14 bg-blue-600 hover:bg-blue-700 text-white font-black text-sm uppercase tracking-widest rounded-2xl transition-all shadow-xl shadow-blue-500/20 active:scale-95">
+            Place Order — {{cartService.total() | currency}}
+          </button>
+          <p class="text-center text-[10px] text-slate-400 font-medium mt-3">By placing your order you agree to our
+            Terms & Privacy Policy</p>
+        </div>
+      </div>
+
+      <!-- Order Total -->
+      <div class="lg:col-span-1">
+        <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 sticky top-28">
+          <h3 class="text-sm font-black text-slate-900 uppercase tracking-widest mb-4">Order Total</h3>
+          <div class="space-y-2 text-sm mb-4">
+            <div *ngFor="let item of cartService.items()" class="flex justify-between">
+              <span class="text-slate-500 truncate font-medium">{{item.product.name}} ×{{item.quantity}}</span>
+              <span class="font-bold text-slate-700 ml-2">{{item.unitPrice * item.quantity | currency}}</span>
+            </div>
+          </div>
+          <div class="border-t border-slate-100 pt-4 flex justify-between">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== STEP 4: CONFIRMATION ===== -->
+    <div *ngIf="step() === 'confirmation'" class="flex items-center justify-center py-10">
+      <div class="bg-white rounded-[2.5rem] shadow-xl border border-slate-100 p-12 max-w-lg w-full text-center">
+        <!-- Success Icon -->
+        <div class="h-24 w-24 rounded-full bg-emerald-50 flex items-center justify-center mx-auto mb-8 shadow-inner">
+          <svg class="h-12 w-12 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <h2 class="text-3xl font-black text-slate-900 tracking-tighter mb-2">Order Placed!</h2>
+        <p class="text-slate-500 font-medium mb-6">Your order has been confirmed and will be with you soon.</p>
+
+        <div class="bg-slate-50 rounded-2xl px-6 py-4 mb-6 border border-slate-100">
+          <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Order ID</p>
+          <p class="text-2xl font-black text-blue-600 tracking-widest">{{placedOrder()?.orderId}}</p>
+        </div>
+
+        <div class="bg-blue-50 rounded-2xl p-4 mb-6 text-left border border-blue-100">
+          <p class="text-xs font-black text-blue-900 mb-1">Delivering to</p>
+          <p class="text-sm font-bold text-blue-800">{{placedOrder()?.deliveryAddress?.fullName}}</p>
+          <p class="text-xs text-blue-700">{{placedOrder()?.deliveryAddress?.line1}},
+            {{placedOrder()?.deliveryAddress?.city}}, {{placedOrder()?.deliveryAddress?.state}} –
+            {{placedOrder()?.deliveryAddress?.pincode}}</p>
+        </div>
+
+        <p class="text-xs text-slate-400 font-medium mb-8">Estimated delivery: <strong class="text-slate-700">3–5
+            business days</strong></p>
+
+        <div class="space-y-3">
+          <button (click)="viewOrders()"
+            class="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white font-black text-sm uppercase tracking-widest rounded-2xl transition-all shadow-xl shadow-blue-500/20 active:scale-95">
+            View My Orders
+          </button>
+          <button (click)="continueShopping()"
+            class="w-full h-12 bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-sm rounded-2xl transition-all">
+            Continue Shopping
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
