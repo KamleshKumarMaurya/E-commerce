@@ -113,7 +113,8 @@ export class AdminCategoryComponent implements OnInit {
 
   flattenCategoriesForList(items: Category[], depth: number = 0): void {
     items.forEach(item => {
-      const hasChildren = !!(item.childCategories && item.childCategories.length > 0);
+      // Only show children if we are at the root level (depth 0)
+      const hasChildren = depth < 1 && !!(item.childCategories && item.childCategories.length > 0);
       const isExpanded = item.id !== undefined && this.expandedIds.has(item.id);
 
       this.displayCategories.push({
@@ -123,7 +124,8 @@ export class AdminCategoryComponent implements OnInit {
         isExpanded
       });
 
-      if (hasChildren && isExpanded) {
+      // Recurse only if it has children, is expanded, and we haven't reached depth limit
+      if (hasChildren && isExpanded && depth < 1) {
         this.flattenCategoriesForList(item.childCategories!, depth + 1);
       }
     });

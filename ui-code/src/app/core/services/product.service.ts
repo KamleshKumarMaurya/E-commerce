@@ -24,14 +24,23 @@ export class ProductService {
     private mockDataService: MockDataService
   ) { }
 
-  getProducts(page: number = 0, size: number = 10): Observable<PaginatedProducts> {
-    const params = new HttpParams()
+  getProducts(page: number = 0, size: number = 10, category?: string, sort?: string, search?: string): Observable<PaginatedProducts> {
+    let params = new HttpParams()
       .set('page', page.toString())
       .set('size', size.toString());
+    if (category) {
+      params = params.set('category', category);
+    }
+    if (sort) {
+      params = params.set('sort', sort);
+    }
+    if (search) {
+      params = params.set('search', search);
+    }
     return this.http.get<PaginatedProducts>(this.apiUrl, { params }).pipe(
       catchError(error => {
         console.warn('Product API failed, falling back to mock data', error);
-        return this.mockDataService.getPaginatedProducts(page, size);
+        return this.mockDataService.getPaginatedProducts(page, size, category, sort, search);
       })
     );
   }

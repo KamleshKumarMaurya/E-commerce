@@ -26,11 +26,11 @@ export class AdminService {
     );
   }
 
-  getPendingApprovals(status: string): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/vendors/approvals?status=${status}`).pipe(
+  getPendingApprovals(status: string, page: number = 0, size: number = 5): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/vendors/approvals?status=${status}&page=${page}&size=${size}`).pipe(
       catchError(error => {
         console.warn('Admin Vendor Approvals API failed, falling back to mock data', error);
-        return this.mockDataService.getPendingVendors();
+        return this.mockDataService.getPaginatedPendingVendors(status, page, size);
       })
     );
   }

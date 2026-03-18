@@ -57,6 +57,13 @@ export class AdminDashboardComponent implements OnInit {
   public lineChartType: ChartType = 'line';
   selectedStatus: string = 'All Statuses';
 
+  // Pagination properties
+  currentPage: number = 0;
+  pageSize: number = 5;
+  totalElements: number = 0;
+  totalPages: number = 0;
+  Math = Math;
+
   constructor(private adminService: AdminService) { }
 
   ngOnInit(): void {
@@ -70,17 +77,51 @@ export class AdminDashboardComponent implements OnInit {
 
   loadVendors(): void {
     const statusToSend = this.selectedStatus === 'All Statuses' ? '' : this.selectedStatus;
-    this.adminService.getPendingApprovals(statusToSend).subscribe(data => this.vendors = data);
+    this.adminService.getPendingApprovals(statusToSend, this.currentPage, this.pageSize).subscribe(data => {
+      this.vendors = data || [];
+      this.totalElements = data?.totalElements || 0;
+      this.totalPages = data?.totalPages || 0;
+    });
   }
 
   onStatusChange(event: any): void {
     this.selectedStatus = event.target.value;
+    this.currentPage = 0; // Reset to first page on filter change
     this.loadVendors();
   }
 
   onVerifyVendor(vendorId: string) {
     this.adminService.updateVendorStatus(vendorId, 'Active').subscribe(() => {
       this.loadData();
+      this.loadVendors();
     });
+  }
+
+  // Pagination methods
+  nextPage(): void {
+    if (this.currentPage < this.totalPages - 1) {
+      this.currentPage++;
+      this.loadVendors();
+    }
+  }
+
+  prevPage(): void {
+    if (this.currentPage > 0) {
+      this.currentPage--;
+      this.loadVendors();
+    }
+  }
+
+  onPageChange(page: number): void {
+    this.currentPage = page;
+    this.loadVendors();
+  }
+
+  getPages(): number[] {
+    const pages = [];
+    for (let i = 0; i < this.totalPages; i++) {
+      pages.push(i);
+    }
+    return pages;
   }
 }

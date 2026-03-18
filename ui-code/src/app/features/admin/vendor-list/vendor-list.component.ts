@@ -22,15 +22,25 @@ export class VendorListComponent implements OnInit {
     this.loadVendors();
   }
 
+  currentPage: number = 0;
+  pageSize: number = 10;
+  totalElements: number = 0;
+  totalPages: number = 0;
+
   loadVendors(): void {
-    // Note: VendorListComponent might need its own VendorManagement service in real apps, 
-    // but here we use AdminService for approvals/verify logic.
     const statusToSend = this.selectedStatus === 'All Statuses' ? '' : this.selectedStatus;
-    this.adminService.getPendingApprovals(statusToSend).subscribe(data => this.vendors = data);
+    this.adminService.getPendingApprovals(statusToSend, this.currentPage, this.pageSize).subscribe(data => {
+      this.vendors = data || [];
+      this.totalElements = data?.totalElements || 0;
+      this.totalPages = data?.totalPages || 0;
+    });
   }
+
+  Math = Math;
 
   onStatusChange(event: any): void {
     this.selectedStatus = event.target.value;
+    this.currentPage = 0;
     this.loadVendors();
   }
 
@@ -42,5 +52,33 @@ export class VendorListComponent implements OnInit {
 
   goBack() {
     this.location.back();
+  }
+
+  // Pagination methods
+  nextPage(): void {
+    if (this.currentPage < this.totalPages - 1) {
+      this.currentPage++;
+      this.loadVendors();
+    }
+  }
+
+  prevPage(): void {
+    if (this.currentPage > 0) {
+      this.currentPage--;
+      this.loadVendors();
+    }
+  }
+
+  onPageChange(page: number): void {
+    this.currentPage = page;
+    this.loadVendors();
+  }
+
+  getPages(): number[] {
+    const pages = [];
+    for (let i = 0; i < this.totalPages; i++) {
+      pages.push(i);
+    }
+    return pages;
   }
 }

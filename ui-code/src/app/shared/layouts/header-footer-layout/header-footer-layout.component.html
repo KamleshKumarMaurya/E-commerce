@@ -20,7 +20,8 @@
       <!-- Navigation Links -->
       <nav class="hidden lg:flex items-center space-x-10 text-sm font-semibold text-slate-600">
         <a href="#" class="hover:text-blue-600 transition-colors">Deals</a>
-        <a href="#" class="hover:text-blue-600 transition-colors">New Arrivals</a>
+        <a routerLink="/shop" [queryParams]="{tab: 'new-arrivals'}" class="hover:text-blue-600 transition-colors">New
+          Arrivals</a>
         <div class="flex items-center space-x-6 h-8 border-s border-slate-200 ps-6">
           <a routerLink="/shop/register-vendor" class="hover:text-blue-600 transition-colors">Sell</a>
           <a routerLink="/login" [queryParams]="{role: 'vendor'}"
@@ -31,7 +32,6 @@
 
       <!-- Right Actions: Search, Cart, Account -->
       <div class="flex items-center space-x-6">
-        <!-- Search Bar -->
         <div class="hidden md:flex relative group">
           <div
             class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none group-focus-within:text-blue-600 transition-colors text-slate-400">
@@ -40,7 +40,8 @@
                 d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </div>
-          <input type="text"
+          <input #searchInput type="text" (input)="onSearchInput(searchInput.value)"
+            (keyup.enter)="onSearch(searchInput.value)"
             class="block w-64 pl-10 pr-4 py-2.5 bg-slate-100 border-none rounded-full text-xs font-medium placeholder-slate-500 focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all"
             placeholder="Search premium products...">
         </div>

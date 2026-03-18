@@ -4,6 +4,7 @@ import { RouterModule } from '@angular/router';
 import { ProductService } from '../../../core/services/product.service';
 import { Product } from '../../../core/models/models';
 import { environment } from '../../../../environments/environment';
+import { ActivatedRoute, Router } from '@angular/router';
 
 @Component({
   selector: 'app-product-list',
@@ -14,6 +15,12 @@ import { environment } from '../../../../environments/environment';
 export class ProductListComponent implements OnInit {
   products = signal<Product[]>([]);
   totalElements = signal<number>(0);
+  currentPage = signal<number>(0);
+  pageSize = signal<number>(12);
+  totalPages = signal<number>(0);
+  selectedCategory = signal<string | undefined>(undefined);
+  activeTab = signal<string>('featured');
+  searchQuery = signal<string | undefined>(undefined);
   Math = Math;
 
   categories = [
@@ -25,7 +32,11 @@ export class ProductListComponent implements OnInit {
     { name: 'Explore More', icon: 'M4 6h16M4 12h16m-7 6h7', color: 'bg-slate-50 text-slate-600' }
   ];
 
-  constructor(private productService: ProductService) { }
+  constructor(
+    private productService: ProductService,
+    private route: ActivatedRoute,
+    private router: Router
+  ) { }
 
   getUrl(url: string | undefined) {
     if (!url) return 'assets/images/placeholder.png';
@@ -35,9 +46,67 @@ export class ProductListComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.productService.getProducts(0, 12).subscribe(response => {
+    this.route.queryParams.subscribe(params => {
+      const tab = params['tab'] || 'featured';
+      const search = params['search'] || undefined;
+      this.activeTab.set(tab);
+      this.searchQuery.set(search);
+      if (search) {
+        this.selectedCategory.set(undefined);
+      }
+      this.currentPage.set(0);
+      this.loadProducts();
+    });
+  }
+
+  loadProducts(): void {
+    const size = this.activeTab() === 'new-arrivals' ? 20 : 12;
+    const sort = this.activeTab() === 'new-arrivals' ? 'id,desc' : undefined;
+    this.pageSize.set(size);
+
+    this.productService.getProducts(this.currentPage(), size, this.selectedCategory(), sort, this.searchQuery()).subscribe(response => {
       this.products.set(response.content);
       this.totalElements.set(response.totalElements);
+      this.totalPages.set(response.totalPages);
     });
+  }
+
+
+  filterByCategory(categoryName: string): void {
+    if (this.activeTab() !== 'featured' || this.searchQuery()) {
+      this.router.navigate(['/shop'], { queryParams: { tab: null, search: null }, queryParamsHandling: 'merge' });
+    }
+
+    if (categoryName === 'Explore More') {
+      this.selectedCategory.set(undefined);
+    } else {
+      this.selectedCategory.set(categoryName);
+    }
+    this.currentPage.set(0);
+    this.loadProducts();
+    this.scrollToTop();
+  }
+
+  private scrollToTop(): void {
+    const featuredSection = document.getElementById('featured-products');
+    if (featuredSection) {
+      featuredSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  }
+
+  nextPage(): void {
+    if (this.currentPage() < this.totalPages() - 1) {
+      this.currentPage.update(page => page + 1);
+      this.loadProducts();
+      this.scrollToTop();
+    }
+  }
+
+  prevPage(): void {
+    if (this.currentPage() > 0) {
+      this.currentPage.update(page => page - 1);
+      this.loadProducts();
+      this.scrollToTop();
+    }
   }
 }
