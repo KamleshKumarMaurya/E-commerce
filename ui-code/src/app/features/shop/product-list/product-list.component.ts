@@ -65,7 +65,10 @@ export class ProductListComponent implements OnInit {
     this.pageSize.set(size);
 
     this.productService.getProducts(this.currentPage(), size, this.selectedCategory(), sort, this.searchQuery()).subscribe(response => {
-      this.products.set(response.content);
+      const sortedProducts = [...response.content].sort((a, b) => {
+        return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+      });
+      this.products.set(sortedProducts);
       this.totalElements.set(response.totalElements);
       this.totalPages.set(response.totalPages);
     });

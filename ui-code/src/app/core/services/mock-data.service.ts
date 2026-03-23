@@ -68,6 +68,26 @@ export class MockDataService {
     );
   }
 
+  getPaginatedPendingVendors(status: string = '', page: number = 0, size: number = 5): Observable<any> {
+    return this.vendors$.pipe(
+      map(vendors => {
+        let filtered = vendors.filter(v => v.status === 'Pending' || v.status === 'In Review');
+        if (status && status !== 'All Statuses') {
+          filtered = filtered.filter(v => v.status.toLowerCase() === status.toLowerCase());
+        }
+        const start = page * size;
+        const end = start + size;
+        return {
+          content: filtered.slice(start, end),
+          totalElements: filtered.length,
+          totalPages: Math.ceil(filtered.length / size),
+          size: size,
+          number: page
+        };
+      })
+    );
+  }
+
   getMockCategories(): Observable<any> {
     return this.categories$.pipe(
       map(categories => {
@@ -280,15 +300,25 @@ export class MockDataService {
     );
   }
 
-  getPaginatedProducts(page: number = 0, size: number = 10): Observable<any> {
+  getPaginatedProducts(page: number = 0, size: number = 10, category?: string, sort?: string, search?: string): Observable<any> {
     return this.products$.pipe(
       map(products => {
+        let filtered = [...products];
+        if (category) {
+          filtered = filtered.filter(p => p.category.toLowerCase() === category.toLowerCase());
+        }
+        if (search) {
+          filtered = filtered.filter(p => p.name.toLowerCase().includes(search.toLowerCase()));
+        }
+        if (sort === 'id,desc') {
+          filtered = filtered.sort((a, b) => b.id.localeCompare(a.id));
+        }
         const start = page * size;
         const end = start + size;
         return {
-          content: products.slice(start, end),
-          totalElements: products.length,
-          totalPages: Math.ceil(products.length / size),
+          content: filtered.slice(start, end),
+          totalElements: filtered.length,
+          totalPages: Math.ceil(filtered.length / size),
           size: size,
           number: page
         };

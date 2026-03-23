@@ -82,6 +82,8 @@ export interface Product {
   categoryName?: string;
   stockQuantity?: number;
   imageUrl?: string;
+  createdAt?: any;
+  updatedAt?: any;
 }
 
 export interface Order {

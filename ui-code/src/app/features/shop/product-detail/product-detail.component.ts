@@ -100,7 +100,21 @@ export class ProductDetailComponent implements OnInit {
     if (variant) return variant.price;
 
     const prod = this.product();
-    return prod?.basePrice || prod?.price || 0;
+    return prod?.price || prod?.basePrice || 0;
+  });
+
+  displayBasePrice = computed(() => {
+    const prod = this.product();
+    return prod?.basePrice || 0;
+  });
+
+  discountPercentage = computed(() => {
+    const currentPrice = this.displayPrice();
+    const basePrice = this.displayBasePrice();
+
+    if (!basePrice || basePrice <= currentPrice) return 0;
+
+    return Math.round(((basePrice - currentPrice) / basePrice) * 100);
   });
 
   getColorCode(colorValue: string): string | null {
